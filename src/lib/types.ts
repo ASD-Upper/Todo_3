@@ -6,6 +6,7 @@ export interface Todo {
   createdAt: Date;
   userId: string;
   size: TodoSize;
+  order?: number;
 }
 
 export type TodoSize = 'small' | 'medium' | 'large';

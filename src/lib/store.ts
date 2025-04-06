@@ -11,6 +11,7 @@ interface TodoStore {
   getUserStats: (userId: string) => UserStats;
   calculatePoints: (userId: string) => number;
   loadTodos: () => void;
+  reorderTodos: (userId: string, startIndex: number, endIndex: number) => void;
 }
 
 // Initial users
@@ -34,10 +35,14 @@ export const useTodoStore = create<TodoStore>()(
       users: initialUsers,
       
       addTodo: (todo) => {
+        const { todos } = get();
+        const userTodos = todos.filter(t => t.userId === todo.userId);
+        
         const newTodo: Todo = {
           ...todo,
           id: Math.random().toString(36).substring(2, 9),
           createdAt: new Date(),
+          order: userTodos.length, // Add default order based on current number of todos
         };
         
         set((state) => ({
@@ -95,6 +100,39 @@ export const useTodoStore = create<TodoStore>()(
         // This is a placeholder function since data is persisted locally
         // In a real application, this would fetch todos from an API
         console.log('Loading todos from local storage');
+      },
+      
+      reorderTodos: (userId, startIndex, endIndex) => {
+        const { todos } = get();
+        const userTodos = todos.filter(todo => todo.userId === userId);
+        
+        // Don't proceed if indices are invalid
+        if (startIndex < 0 || endIndex < 0 || startIndex >= userTodos.length || endIndex >= userTodos.length) {
+          return;
+        }
+        
+        // Create a copy of the user's todos
+        const newUserTodos = [...userTodos];
+        
+        // Remove the item from its original position
+        const [movedItem] = newUserTodos.splice(startIndex, 1);
+        
+        // Insert the item at the new position
+        newUserTodos.splice(endIndex, 0, movedItem);
+        
+        // Update order property for all user todos
+        const updatedUserTodos = newUserTodos.map((todo, index) => ({
+          ...todo,
+          order: index
+        }));
+        
+        // Update the store with all todos (both the user's reordered todos and other users' todos)
+        set((state) => ({
+          todos: [
+            ...state.todos.filter(todo => todo.userId !== userId),
+            ...updatedUserTodos
+          ]
+        }));
       },
     }),
     {

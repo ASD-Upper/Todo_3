@@ -13,7 +13,9 @@ import ResponsiveContainer from "@/components/responsive-container";
 export default function UserPage({ params }: { params: { userId: string } }) {
   const { userId } = params;
   const { todos, users, getUserStats } = useTodoStore();
-  const userTodos = todos.filter((todo) => todo.userId === userId);
+  const userTodos = todos
+    .filter((todo) => todo.userId === userId)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const { isRTL } = useLanguage();
   const [showAiInsights, setShowAiInsights] = useState(false);
 
