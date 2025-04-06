@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useTodoStore } from "@/lib/store";
 import { useLanguage } from "@/lib/language-context";
@@ -21,8 +23,20 @@ const UserStats: React.FC<UserStatsProps> = ({ userId, username, avatar }) => {
     recommendations: string[];
     performance: string;
   } | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
-  const stats = getUserStats(userId);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const stats = isClient
+    ? getUserStats(userId)
+    : {
+        totalTasks: 0,
+        completedTasks: 0,
+        pendingTasks: 0,
+        points: 0,
+      };
 
   const getAIAnalysis = async () => {
     setLoading(true);
@@ -307,6 +321,11 @@ const StatCard: React.FC<StatCardProps> = ({
   icon,
 }) => {
   const { isRTL } = useLanguage();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const renderIcon = () => {
     switch (icon) {
@@ -396,7 +415,7 @@ const StatCard: React.FC<StatCardProps> = ({
           highlight ? "text-blue-600" : "text-gray-800"
         }`}
       >
-        {value}
+        {mounted ? value : "0"}
       </p>
     </div>
   );
