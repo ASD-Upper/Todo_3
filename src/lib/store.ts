@@ -10,6 +10,7 @@ interface TodoStore {
   deleteTodo: (id: string) => void;
   getUserStats: (userId: string) => UserStats;
   calculatePoints: (userId: string) => number;
+  loadTodos: () => void;
 }
 
 // Initial users
@@ -88,6 +89,12 @@ export const useTodoStore = create<TodoStore>()(
         return userTodos.reduce((total, todo) => {
           return total + POINTS_MAP[todo.size];
         }, 0);
+      },
+      
+      loadTodos: () => {
+        // This is a placeholder function since data is persisted locally
+        // In a real application, this would fetch todos from an API
+        console.log('Loading todos from local storage');
       },
     }),
     {
