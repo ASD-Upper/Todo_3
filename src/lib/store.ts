@@ -103,11 +103,16 @@ export const useTodoStore = create<TodoStore>()(
       },
       
       reorderTodos: (userId, startIndex, endIndex) => {
+        console.log('reorderTodos called with:', { userId, startIndex, endIndex });
+        
         const { todos } = get();
         const userTodos = todos.filter(todo => todo.userId === userId);
         
+        console.log('User todos:', userTodos);
+        
         // Don't proceed if indices are invalid
         if (startIndex < 0 || endIndex < 0 || startIndex >= userTodos.length || endIndex >= userTodos.length) {
+          console.error('Invalid indices:', { startIndex, endIndex, todoCount: userTodos.length });
           return;
         }
         
@@ -126,13 +131,20 @@ export const useTodoStore = create<TodoStore>()(
           order: index
         }));
         
+        console.log('Updated user todos:', updatedUserTodos);
+        
         // Update the store with all todos (both the user's reordered todos and other users' todos)
-        set((state) => ({
-          todos: [
-            ...state.todos.filter(todo => todo.userId !== userId),
-            ...updatedUserTodos
-          ]
-        }));
+        set((state) => {
+          const newState = {
+            todos: [
+              ...state.todos.filter(todo => todo.userId !== userId),
+              ...updatedUserTodos
+            ]
+          };
+          
+          console.log('New todos state:', newState.todos);
+          return newState;
+        });
       },
     }),
     {

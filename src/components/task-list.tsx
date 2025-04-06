@@ -27,12 +27,14 @@ interface TaskListProps {
 const TaskList: React.FC<TaskListProps> = ({ todos }) => {
   const { isRTL } = useLanguage();
   const { reorderTodos } = useTodoStore();
-  
+
   // Sort todos by order property
-  const sortedPendingTodos = [...todos.filter((todo) => !todo.completed)]
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    
-  const completedTodos = todos.filter((todo) => todo.completed)
+  const sortedPendingTodos = [...todos.filter((todo) => !todo.completed)].sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0)
+  );
+
+  const completedTodos = todos
+    .filter((todo) => todo.completed)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   // Configure sensors for drag detection
@@ -45,18 +47,39 @@ const TaskList: React.FC<TaskListProps> = ({ todos }) => {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
+    console.log("Drag ended:", {
+      activeId: active?.id,
+      overId: over?.id,
+      event: event,
+    });
+
     if (over && active.id !== over.id) {
       const activeId = active.id as string;
       const overId = over.id as string;
-      
-      const activeIndex = sortedPendingTodos.findIndex(todo => todo.id === activeId);
-      const overIndex = sortedPendingTodos.findIndex(todo => todo.id === overId);
-      
+
+      const activeIndex = sortedPendingTodos.findIndex(
+        (todo) => todo.id === activeId
+      );
+      const overIndex = sortedPendingTodos.findIndex(
+        (todo) => todo.id === overId
+      );
+
+      console.log("Indices:", { activeIndex, overIndex });
+      console.log("Todos:", sortedPendingTodos);
+
       if (activeIndex !== -1 && overIndex !== -1) {
         // Get userId from the first todo (they all have the same userId)
         const userId = sortedPendingTodos[0]?.userId;
+        console.log("Found userId:", userId);
+
         if (userId) {
+          console.log(
+            "Calling reorderTodos with:",
+            userId,
+            activeIndex,
+            overIndex
+          );
           reorderTodos(userId, activeIndex, overIndex);
         }
       }
@@ -73,14 +96,14 @@ const TaskList: React.FC<TaskListProps> = ({ todos }) => {
               {sortedPendingTodos.length})
             </h3>
           </div>
-          
+
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext 
-              items={sortedPendingTodos.map(todo => todo.id)}
+            <SortableContext
+              items={sortedPendingTodos.map((todo) => todo.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-3">
