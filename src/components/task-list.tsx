@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Todo } from "@/lib/types";
 import TodoItem from "./todo-item";
 import { useLanguage } from "@/lib/language-context";
@@ -6,17 +6,16 @@ import { useTodoStore } from "@/lib/store";
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
-  PointerSensor,
   useSensor,
   useSensors,
   DragEndEvent,
+  MouseSensor,
+  TouchSensor,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  arrayMove,
 } from "@dnd-kit/sortable";
 import { SortableTodoItem } from "./sortable-todo-item";
 
@@ -27,73 +26,83 @@ interface TaskListProps {
 const TaskList: React.FC<TaskListProps> = ({ todos }) => {
   const { isRTL } = useLanguage();
   const { reorderTodos } = useTodoStore();
+  const [localTodos, setLocalTodos] = useState<Todo[]>(todos);
 
-  // Sort todos by order property
-  const sortedPendingTodos = [...todos.filter((todo) => !todo.completed)].sort(
-    (a, b) => (a.order ?? 0) - (b.order ?? 0)
-  );
+  // Update local todos when the prop changes
+  useEffect(() => {
+    setLocalTodos(todos);
+  }, [todos]);
 
-  const completedTodos = todos
+  // Get and sort todos
+  const pendingTodos = localTodos
+    .filter((todo) => !todo.completed)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const completedTodos = localTodos
     .filter((todo) => todo.completed)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  // Configure sensors for drag detection
+  // Configure sensors with appropriate activation constraints
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 10 }, // Require 10px of movement before dragging starts
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 8 }, // Wait 250ms and 8px movement for touch
     })
   );
 
+  // Handle drag end event
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    console.log("Drag ended:", {
-      activeId: active?.id,
-      overId: over?.id,
-      event: event,
-    });
+    if (!over || active.id === over.id) return;
 
-    if (over && active.id !== over.id) {
-      const activeId = active.id as string;
-      const overId = over.id as string;
+    try {
+      const activeId = String(active.id);
+      const overId = String(over.id);
 
-      const activeIndex = sortedPendingTodos.findIndex(
-        (todo) => todo.id === activeId
-      );
-      const overIndex = sortedPendingTodos.findIndex(
-        (todo) => todo.id === overId
-      );
+      // Find the indices of the dragged items
+      const oldIndex = pendingTodos.findIndex((todo) => todo.id === activeId);
+      const newIndex = pendingTodos.findIndex((todo) => todo.id === overId);
 
-      console.log("Indices:", { activeIndex, overIndex });
-      console.log("Todos:", sortedPendingTodos);
-
-      if (activeIndex !== -1 && overIndex !== -1) {
-        // Get userId from the first todo (they all have the same userId)
-        const userId = sortedPendingTodos[0]?.userId;
-        console.log("Found userId:", userId);
-
-        if (userId) {
-          console.log(
-            "Calling reorderTodos with:",
-            userId,
-            activeIndex,
-            overIndex
-          );
-          reorderTodos(userId, activeIndex, overIndex);
-        }
+      if (oldIndex === -1 || newIndex === -1) {
+        console.error("Invalid indices during drag", { oldIndex, newIndex });
+        return;
       }
+
+      // Update UI immediately for better user experience
+      const newPendingTodos = arrayMove(pendingTodos, oldIndex, newIndex);
+
+      // Update the order properties
+      const updatedTodos = newPendingTodos.map((todo, index) => ({
+        ...todo,
+        order: index,
+      }));
+
+      // Set new local state that includes completed todos + reordered pending todos
+      setLocalTodos([...completedTodos, ...updatedTodos]);
+
+      // Get the user ID from the first todo (all todos in this list should belong to the same user)
+      const userId = pendingTodos[0]?.userId;
+
+      if (userId) {
+        // Update the store
+        reorderTodos(userId, oldIndex, newIndex);
+      }
+    } catch (error) {
+      console.error("Error during drag operation:", error);
     }
   };
 
   return (
     <div>
-      {sortedPendingTodos.length > 0 && (
+      {pendingTodos.length > 0 && (
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
               {isRTL ? "المهام المعلقة" : "Pending Tasks"} (
-              {sortedPendingTodos.length})
+              {pendingTodos.length})
             </h3>
           </div>
 
@@ -103,11 +112,11 @@ const TaskList: React.FC<TaskListProps> = ({ todos }) => {
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={sortedPendingTodos.map((todo) => todo.id)}
+              items={pendingTodos.map((todo) => todo.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-3">
-                {sortedPendingTodos.map((todo) => (
+                {pendingTodos.map((todo) => (
                   <SortableTodoItem key={todo.id} todo={todo} />
                 ))}
               </div>

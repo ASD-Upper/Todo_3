@@ -105,46 +105,47 @@ export const useTodoStore = create<TodoStore>()(
       reorderTodos: (userId, startIndex, endIndex) => {
         console.log('reorderTodos called with:', { userId, startIndex, endIndex });
         
-        const { todos } = get();
-        const userTodos = todos.filter(todo => todo.userId === userId);
-        
-        console.log('User todos:', userTodos);
-        
-        // Don't proceed if indices are invalid
-        if (startIndex < 0 || endIndex < 0 || startIndex >= userTodos.length || endIndex >= userTodos.length) {
-          console.error('Invalid indices:', { startIndex, endIndex, todoCount: userTodos.length });
-          return;
-        }
-        
-        // Create a copy of the user's todos
-        const newUserTodos = [...userTodos];
-        
-        // Remove the item from its original position
-        const [movedItem] = newUserTodos.splice(startIndex, 1);
-        
-        // Insert the item at the new position
-        newUserTodos.splice(endIndex, 0, movedItem);
-        
-        // Update order property for all user todos
-        const updatedUserTodos = newUserTodos.map((todo, index) => ({
-          ...todo,
-          order: index
-        }));
-        
-        console.log('Updated user todos:', updatedUserTodos);
-        
-        // Update the store with all todos (both the user's reordered todos and other users' todos)
-        set((state) => {
-          const newState = {
-            todos: [
-              ...state.todos.filter(todo => todo.userId !== userId),
-              ...updatedUserTodos
-            ]
-          };
+        try {
+          // Get all todos from the store
+          const { todos } = get();
           
-          console.log('New todos state:', newState.todos);
-          return newState;
-        });
+          // Only get the non-completed todos for reordering for the specific user
+          const userPendingTodos = todos.filter(todo => todo.userId === userId && !todo.completed);
+          
+          // Get all other todos (todos from other users + completed todos for this user)
+          const otherTodos = todos.filter(todo => todo.userId !== userId || todo.completed);
+          
+          console.log('User pending todos before reordering:', userPendingTodos);
+          
+          // Don't proceed if indices are invalid
+          if (startIndex < 0 || endIndex < 0 || startIndex >= userPendingTodos.length || endIndex >= userPendingTodos.length) {
+            console.error('Invalid indices:', { startIndex, endIndex, todoCount: userPendingTodos.length });
+            return;
+          }
+          
+          // Move the item in the array
+          const reorderedTodos = [...userPendingTodos];
+          const [movedItem] = reorderedTodos.splice(startIndex, 1);
+          reorderedTodos.splice(endIndex, 0, movedItem);
+          
+          // Update the order property for each item
+          const updatedTodos = reorderedTodos.map((todo, index) => ({
+            ...todo,
+            order: index
+          }));
+          
+          console.log('Reordered todos with updated order:', updatedTodos);
+          
+          // Combine all todos and update the store
+          const newTodos = [...otherTodos, ...updatedTodos];
+          
+          // Set the new todos array in the store
+          set({ todos: newTodos });
+          
+          console.log('Store updated with new todos array:', newTodos);
+        } catch (error) {
+          console.error('Error in reorderTodos:', error);
+        }
       },
     }),
     {
