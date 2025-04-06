@@ -4,7 +4,6 @@ import { useTodoStore } from "@/lib/store";
 import { useLanguage } from "@/lib/language-context";
 import { Button } from "./ui/button";
 import { analyzeUserPerformance } from "@/lib/ai-service";
-import { UserStats as IUserStats } from "@/lib/types";
 import ResponsiveContainer from "./responsive-container";
 
 interface UserStatsProps {

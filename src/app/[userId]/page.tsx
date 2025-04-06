@@ -16,7 +16,6 @@ export default function UserPage({ params }: { params: { userId: string } }) {
   const userTodos = todos.filter((todo) => todo.userId === userId);
   const { isRTL } = useLanguage();
   const [showAiInsights, setShowAiInsights] = useState(false);
-  const stats = getUserStats(userId);
 
   // Find the user to get their name and avatar
   const user = users.find((u) => u.id === userId);

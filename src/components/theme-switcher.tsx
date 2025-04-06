@@ -3,9 +3,11 @@
 import React from "react";
 import { useTheme } from "@/lib/theme-context";
 import { Button } from "./ui/button";
+import { useLanguage } from "@/lib/language-context";
 
 export default function ThemeSwitcher() {
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
+  const { isRTL } = useLanguage();
 
   return (
     <Button

@@ -9,7 +9,7 @@ import { useLanguage } from "@/lib/language-context";
 import ResponsiveContainer from "@/components/responsive-container";
 
 export default function Home() {
-  const { isRTL, language } = useLanguage();
+  const { isRTL } = useLanguage();
 
   return (
     <main>

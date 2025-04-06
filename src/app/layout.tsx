@@ -4,6 +4,7 @@ import "./globals.css";
 import { LanguageProvider } from "@/lib/language-context";
 import { ThemeProvider } from "@/lib/theme-context";
 import Header from "@/components/header";
+import SupabaseProvider from "@/components/supabase-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,10 +34,12 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <LanguageProvider>
-            <Header />
-            <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 mt-14">
-              {children}
-            </div>
+            <SupabaseProvider>
+              <Header />
+              <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 mt-14">
+                {children}
+              </div>
+            </SupabaseProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
