@@ -1,16 +1,13 @@
 import UserPageClient from "@/components/user-page-client";
 import { Metadata } from "next";
 
-type Params = {
-  params: {
-    userId: string;
-  };
-  searchParams?: Record<string, string | string[]>;
-};
+interface PageProps {
+  params: { userId: string };
+}
 
 export async function generateMetadata({ 
   params 
-}: Params): Promise<Metadata> {
+}: PageProps): Promise<Metadata> {
   // This function is required for proper typing in Next.js 15
   return {
     title: `User ${params.userId}'s Tasks`,
@@ -18,9 +15,9 @@ export async function generateMetadata({
   };
 }
 
-export default function UserPage({ 
+export default async function UserPage({ 
   params 
-}: Params) {
+}: PageProps) {
   const { userId } = params;
   
   // Render the client component with the userId
