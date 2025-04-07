@@ -10,9 +10,17 @@ import { useTodoStore } from "@/lib/store";
 import { useLanguage } from "@/lib/language-context";
 import ResponsiveContainer from "@/components/responsive-container";
 
-export default function UserPage({ params }: { params: { userId: string } }) {
+// Define the correct type for the page props in Next.js 15
+interface PageProps {
+  params: {
+    userId: string;
+  };
+  searchParams: Record<string, string | string[] | undefined>;
+}
+
+export default function UserPage({ params, searchParams }: PageProps) {
   const { userId } = params;
-  const { todos, users, getUserStats } = useTodoStore();
+  const { todos, users } = useTodoStore(); // Removed getUserStats to avoid unused var warning
   const userTodos = todos
     .filter((todo) => todo.userId === userId)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
