@@ -1,25 +1,20 @@
 import UserPageClient from "@/components/user-page-client";
 import { Metadata } from "next";
 
-export async function generateMetadata({ 
-  params 
-}: {
+type Props = {
   params: { userId: string }
-}): Promise<Metadata> {
-  // This function is required for proper typing in Next.js 15
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `User ${params.userId}'s Tasks`,
     description: `Manage tasks for user ${params.userId}`,
   };
 }
 
-export default function UserPage({ 
-  params 
-}: {
-  params: { userId: string }
-}) {
-  const { userId } = params;
+// Let Next.js infer types for page components
+export default function UserPage(props: Props) {
+  const { userId } = props.params;
   
-  // Render the client component with the userId
   return <UserPageClient userId={userId} />;
 }
